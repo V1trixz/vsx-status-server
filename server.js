@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const axios = require('axios');
 const { status } = require('minecraft-server-util');
+const path = require('path');
 const app = express();
 const port = process.env.PORT || 3000;
 
@@ -10,13 +11,13 @@ const serverIP = 'VsxSmp.aternos.me';
 const serverPort = 25565;
 const webhookURL = 'https://discord.com/api/webhooks/1377053263085572306/wlFGZ8UDvxMDlKTqo_ySS-nZW_v9wxc1wqEKpxbIj3KurqTIt0ReZ9qJ9oLot-76WGpm';
 const modpackURL = 'https://drive.usercontent.google.com/download?id=1i_gbhSrcSL40Qr_DvW8ctew_-56Uty5j&export=download&authuser=0';
-const siteURL = 'http://localhost:3000'; // Substitua pela URL do site hospedado
-const customWebhookMessageId = '1378494551001665661'; // Insira o ID da mensagem que você deseja editar
+const siteURL = 'https://vsx-status-server.onrender.com'; // URL do site hospedado no Render
+const customWebhookMessageId = '1378494551001665661'; // ID da mensagem a ser editada
 let lastStatus = null;
 let lastPlayerCount = null;
 
 app.use(cors());
-app.use(express.static('public')); // Servir arquivos estáticos (frontend)
+app.use(express.static(__dirname)); // Servir arquivos estáticos da raiz (onde está o index.html)
 
 async function checkServerStatus() {
     const startTime = Date.now();
@@ -93,7 +94,12 @@ app.get('/status', async (req, res) => {
     res.json(serverStatus);
 });
 
-// Verificar status do servidor a cada 30 segundos
+// Rota para servir o index.html
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'index.html'));
+});
+
+// Verificar status do servidor a cada 10 segundos
 setInterval(checkServerStatus, 10000);
 
 app.listen(port, () => {
