@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vsx SMP - Status do Servidor</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        @font-face {
+            font-family: 'Minecraftia';
+            src: url('https://dl.dafont.com/dl/?f=minecraftia') format('truetype');
+        }
+        body {
+            margin: 0;
+            padding: 0;
+            background: #0a0a0a;
+            font-family: 'Inter', sans-serif;
+            color: #e0e0e0;
+            min-height: 100vh;
+            background-image: radial-gradient(circle at center, rgba(76,175,80,0.15), transparent);
+            display: flex;
+            flex-direction: column;
+        }
+        .navbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: rgba(0, 0, 0, 0.95);
+            padding: 12px 20px;
+            display: flex;
+            justify-content: center;
+            gap: 25px;
+            z-index: 1000;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.6);
+        }
+        .navbar a {
+            color: #4caf50;
+            font-family: 'Minecraftia', monospace;
+            font-size: 1.1rem;
+            text-decoration: none;
+            text-transform: uppercase;
+            transition: color 0.2s ease, transform 0.2s ease;
+        }
+        .navbar a:hover, .navbar a.active {
+            color: #80e27e;
+            transform: translateY(-1px);
+            text-shadow: 0 0 6px rgba(76, 175, 80, 0.6);
+        }
+        .container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 80px 20px 20px;
+        }
+        .card {
+            background: rgba(18, 18, 18, 0.92);
+            border-radius: 12px;
+            padding: 25px;
+            width: 90%;
+            max-width: 400px;
+            max-height: 70vh;
+            overflow-y: auto;
+            text-align: center;
+            box-shadow: 0 6px 25px rgba(0, 0, 0, 0.6);
+            animation: fadeIn 0.7s ease-out;
+            scrollbar-width: thin;
+            scrollbar-color: #4caf50 #121212;
+        }
+        .card h1 {
+            font-family: 'Minecraftia', monospace;
+            font-size: 2rem;
+            margin: 0 0 15px;
+            color: #4caf50;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            text-shadow: 0 0 10px rgba(76, 175, 80, 0.6);
+        }
+        .card img {
+            width: 48px;
+            height: 48px;
+            border-radius: 8px;
+            margin: 12px 0;
+        }
+        .status {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin: 10px 0;
+            transition: color 0.3s ease;
+        }
+        .status.online {
+            color: #4caf50;
+            text-shadow: 0 0 6px rgba(76, 175, 80, 0.4);
+        }
+        .status.offline {
+            color: #d32f2f;
+            text-shadow: 0 0 6px rgba(211, 47, 47, 0.4);
+        }
+        .info {
+            font-size: 0.85rem;
+            margin: 8px 0;
+            color: #b0b0b0;
+            transition: opacity 0.3s ease;
+        }
+        .player-list {
+            margin-top: 12px;
+            max-height: 150px;
+            overflow-y: auto;
+            font-size: 0.85rem;
+            scrollbar-width: thin;
+            scrollbar-color: #4caf50 #121212;
+        }
+        .player-list div {
+            display: flex;
+            align-items: center;
+            margin: 5px 0;
+            opacity: 0;
+            animation: slideIn 0.5s ease forwards;
+        }
+        .player-list img {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+        .section {
+            display: none;
+            padding: 25px;
+            max-width: 600px;
+            max-height: 70vh;
+            overflow-y: auto;
+            margin: 80px auto 20px;
+            background: rgba(18, 18, 18, 0.92);
+            border-radius: 12px;
+            box-shadow: 0 6px 25px rgba(0, 0, 0, 0.6);
+            scrollbar-width: thin;
+            scrollbar-color: #4caf50 #121212;
+        }
+        .section.active {
+            display: block;
+            animation: fadeIn 0.7s ease-out;
+        }
+        .section h2 {
+            font-family: 'Minecraftia', monospace;
+            color: #4caf50;
+            font-size: 1.6rem;
+            margin-bottom: 15px;
+            text-shadow: 0 0 8px rgba(76, 175, 80, 0.5);
+        }
+        .section ul, .section li {
+            font-size: 0.85rem;
+            color: #b0b0b0;
+            line-height: 1.7;
+            text-align: left;
+        }
+        .download-btn {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #4caf50;
+            color: #fff;
+            padding: 10px 20px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-size: 0.85rem;
+            font-weight: 600;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.5);
+            transition: all 0.2s ease;
+        }
+        .download-btn:hover {
+            background: #388e3c;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(76, 175, 80, 0.5);
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-12px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(-10px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #121212;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #4caf50;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="navbar">
+        <a href="#home" class="active">Home</a>
+        <a href="#faq">FAQ</a>
+        <a href="#regras">Regras</a>
+    </div>
+    <div class="container">
+        <div id="home" class="section card active">
+            <h1>Vsx SMP</h1>
+            <img id="favicon" src="https://api.mcstatus.io/v2/icon/default" alt="Server Icon">
+            <div id="status" class="status">Carregando...</div>
+            <div id="ip" class="info">IP: Carregando...</div>
+            <div id="ping" class="info">Ping: Carregando...</div>
+            <div id="version" class="info">Versão: Carregando...</div>
+            <div id="players" class="info">Jogadores: Carregando...</div>
+            <div id="motd" class="info">MOTD: Carregando...</div>
+            <div id="player-list" class="player-list"></div>
+        </div>
+        <div id="faq" class="section">
+            <h2>FAQ - Vsx SMP</h2>
+            <ul>
+                <li><strong>Como entro no servidor?</strong> Conecte-se usando o IP VsxSmp.aternos.me e baixe o modpack pelo botão abaixo.</li>
+                <li><strong>Quais mods são necessários?</strong> O modpack oficial inclui todos os mods necessários. Baixe pelo botão no canto inferior direito.</li>
+                <li><strong>Posso usar Minecraft crackeado?</strong> Sim, o servidor suporta contas não oficiais, mas respeite as regras.</li>
+                <li><strong>Como configuro o modpack?</strong> Extraia o modpack baixado, coloque na pasta de mods do seu Minecraft (via Forge), e selecione o perfil correto.</li>
+                <li><strong>Quais são os requisitos de sistema?</strong> Recomendamos 8GB de RAM, CPU dual-core, e uma GPU básica para rodar o modpack sem lag.</li>
+                <li><strong>Como reporto um problema?</strong> Contate um moderador no Discord do Vsx SMP.</li>
+                <li><strong>O servidor é 24/7?</strong> Não, o servidor usa Aternos e pode estar offline quando não há jogadores. Inicie-o via painel Aternos.</li>
+                <li><strong>Posso convidar amigos?</strong> Sim, desde que eles sigam as regras e usem o modpack oficial.</li>
+                <li><strong>Como participo de raids?</strong> Raids são permitidas apenas nos finais de semana (10h–00h). Anuncie no Discord para organizar.</li>
+            </ul>
+        </div>
+        <div id="regras" class="section">
+            <h2>Regras - Vsx SMP</h2>
+            <ul>
+                <li>Raids são permitidas apenas nos finais de semana, das 10h às 00h.</li>
+                <li>Griefing é permitido SOMENTE durante raids; fora disso, é estritamente proibido.</li>
+                <li>Respeite todos os jogadores e moderadores.</li>
+                <li>Não use hacks, cheats ou mods não autorizados.</li>
+                <li>Evite spam ou comportamento tóxico no chat.</li>
+                <li>Construções ofensivas ou inapropriadas serão removidas.</li>
+                <li>Fazendas automáticas são permitidas, mas limite a 4 por jogador para evitar lag.</li>
+                <li>Participe do Discord para atualizações e reportar problemas.</li>
+                <li>Mantenha o servidor ativo; inicie-o via Aternos se estiver offline.</li>
+                <li>Denuncie bugs ou infrações diretamente aos moderadores no Discord.</li>
+            </ul>
+        </div>
+    </div>
+    <a href="" id="modpack-btn" class="download-btn">Baixar Modpack</a>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        function updateServerStatus() {
+            $.getJSON('/status', function(data) {
+                const statusElement = $("#status");
+                const faviconElement = $("#favicon");
+                const ipElement = $("#ip");
+                const pingElement = $("#ping");
+                const playersElement = $("#players");
+                const motdElement = $("#motd");
+                const versionElement = $("#version");
+                const playerListElement = $("#player-list");
+                const modpackBtn = $("#modpack-btn");
+
+                modpackBtn.attr("href", data.modpack);
+
+                if (!data.online) {
+                    statusElement.text("Servidor Offline").removeClass("online").addClass("offline");
+                    faviconElement.attr("src", "https://api.mcstatus.io/v2/icon/default");
+                    ipElement.text(`IP: ${data.ip}`);
+                    pingElement.text("Ping: Indisponível");
+                    playersElement.text("Jogadores: 0/0");
+                    motdElement.text("MOTD: Indisponível");
+                    versionElement.text("Versão: Indisponível");
+                    playerListElement.empty();
+                    return;
+                }
+
+                statusElement.text("Servidor Online").removeClass("offline").addClass("online");
+                faviconElement.attr("src", data.favicon || "https://api.mcstatus.io/v2/icon/default");
+                ipElement.text(`IP: ${data.ip}`);
+                pingElement.text(`Ping: ${data.ping}ms`);
+                playersElement.text(`Jogadores: ${data.players.online}/${data.players.max}`);
+                motdElement.text(`MOTD: ${data.motd}`);
+                versionElement.text(`Versão: ${data.version}`);
+
+                playerListElement.empty();
+                if (data.players.list && data.players.list.length > 0) {
+                    data.players.list.forEach((player, index) => {
+                        const playerElement = `<div style="animation-delay: ${index * 0.1}s"><img src="https://minotar.net/avatar/${player.name}/24.png" alt="${player.name}">${player.name}</div>`;
+                        playerListElement.append(playerElement);
+                    });
+                } else {
+                    playerListElement.append("<div>Nenhum jogador online</div>");
+                }
+            }).fail(function() {
+                $("#status").text("Erro ao carregar status").removeClass("online").addClass("offline");
+                $("#favicon").attr("src", "https://api.mcstatus.io/v2/icon/default");
+                $("#ip").text("IP: VsxSmp.aternos.me");
+                $("#ping").text("Ping: Indisponível");
+                $("#players").text("Jogadores: 0/0");
+                $("#motd").text("MOTD: Indisponível");
+                $("#version").text("Versão: Indisponível");
+                $("#player-list").empty();
+            });
+        }
+
+        // Navegação entre abas
+        $(document).ready(function() {
+            $('.navbar a').click(function(e) {
+                e.preventDefault();
+                const target = $(this).attr('href').substring(1);
+                $('.section').removeClass('active');
+                $(`#${target}`).addClass('active');
+                $('.navbar a').removeClass('active');
+                $(this).addClass('active');
+            });
+        });
+
+        // Atualiza o status inicialmente e a cada 30 segundos
+        updateServerStatus();
+        setInterval(updateServerStatus, 10000);
+    </script>
+</body>
+</html>
